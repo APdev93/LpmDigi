@@ -2,179 +2,166 @@ const STORAGE_KEY = localStorage.getItem("klp");
 const namaUnit = document.getElementById("branch");
 const namaUser = document.getElementById("name");
 
-namaUnit.innerText =
-    localStorage.getItem("cabangID") + " " + localStorage.getItem("unit") || "";
+namaUnit.innerText = localStorage.getItem("cabangID") + " " + localStorage.getItem("unit") || "";
 namaUser.innerText = localStorage.getItem("name") || "";
 
 function showLoading() {
-    document.getElementById("loadingIndicator").style.display = "flex";
+	document.getElementById("loadingIndicator").style.display = "flex";
 }
 
 function hideLoading() {
-    document.getElementById("loadingIndicator").style.display = "none";
+	document.getElementById("loadingIndicator").style.display = "none";
 }
 
 function getKodeHariNow() {
-    let day = new Date().getDay(); // 0 = Minggu, 1 = Senin, ... 6 = Sabtu
+	let day = new Date().getDay(); // 0 = Minggu, 1 = Senin, ... 6 = Sabtu
 
-    // konversi ke mapping Anda (1–7)
-    let mapping = {
-        0: 1, // Minggu
-        1: 2, // Senin
-        2: 3, // Selasa
-        3: 4, // Rabu
-        4: 5, // Kamis
-        5: 6, // Jumat
-        6: 7, // Sabtu
-    };
+	// konversi ke mapping Anda (1–7)
+	let mapping = {
+		0: 1, // Minggu
+		1: 2, // Senin
+		2: 3, // Selasa
+		3: 4, // Rabu
+		4: 5, // Kamis
+		5: 6, // Jumat
+		6: 7 // Sabtu
+	};
 
-    return mapping[day];
+	return mapping[day];
 }
 
 async function getKelompok() {
-    try {
-        let response = await fetch(
-            `/group-list/${localStorage.getItem(
-                "cabangID"
-            )}/${localStorage.getItem("username")}`,
-            {
-                headers: {
-                    Authorization: localStorage.getItem("auth"),
-                },
-            }
-        );
-        if (!response.ok) throw new Error("Gagal mengambil data kelompok");
-        let data = await response.json();
-        return data.data;
-    } catch (error) {
-        alert("ERROR: " + (error.response?.data || error.message));
-    }
+	try {
+		let response = await fetch(
+			`/group-list/${localStorage.getItem("cabangID")}/${localStorage.getItem("username")}`,
+			{
+				headers: {
+					Authorization: localStorage.getItem("auth")
+				}
+			}
+		);
+		if (!response.ok) throw new Error("Gagal mengambil data kelompok");
+		let data = await response.json();
+		return data.data;
+	} catch (error) {
+		alert("ERROR: " + (error.response?.data || error.message));
+	}
 }
 
 async function getNasabah() {
-    try {
-        let response = await fetch(
-            `/collect-list/${localStorage.getItem(
-                "cabangID"
-            )}/${localStorage.getItem("username")}`,
-            {
-                headers: {
-                    Authorization: localStorage.getItem("auth"),
-                },
-            }
-        );
-        if (!response.ok) throw new Error("Gagal mengambil data nasabah");
-        let data = await response.json();
-        return data.data;
-    } catch (error) {
-        alert("ERROR: " + (error.response?.data || error.message));
-    }
+	try {
+		let response = await fetch(
+			`/collect-list/${localStorage.getItem("cabangID")}/${localStorage.getItem("username")}`,
+			{
+				headers: {
+					Authorization: localStorage.getItem("auth")
+				}
+			}
+		);
+		if (!response.ok) throw new Error("Gagal mengambil data nasabah");
+		let data = await response.json();
+		return data.data;
+	} catch (error) {
+		alert("ERROR: " + (error.response?.data || error.message));
+	}
 }
 
 function loadData(kelompokData, nasabahData) {
-    let stored = loadLocal();
+	let stored = loadLocal();
 
-    let kelompok = kelompokData.map((g) => ({
-        ...g,
-        nasabah: [],
-    }));
+	let kelompok = kelompokData.map((g) => ({
+		...g,
+		nasabah: []
+	}));
 
-    nasabahData.forEach((n) => {
-        let target = kelompok.find((k) => k.id === n.IdKelompok);
+	nasabahData.forEach((n) => {
+		let target = kelompok.find((k) => k.id === n.IdKelompok);
 
-        if (target) {
-            target.nasabah.push({
-                rill: n.rill,
-                ke: n.ke,
-                idProduk: n.idProduk,
-                id: n.id,
-                nama: n.nama,
-                tagihan: n.jumlahAngsuran,
-                status: n.status || "none",
-            });
-        }
-    });
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ kelompok }));
-    return { kelompok };
+		if (target) {
+			target.nasabah.push({
+				rill: n.rill,
+				ke: n.ke,
+				idProduk: n.idProduk,
+				id: n.id,
+				nama: n.nama,
+				tagihan: n.jumlahAngsuran,
+				status: n.status || "none"
+			});
+		}
+	});
+	localStorage.setItem(STORAGE_KEY, JSON.stringify({ kelompok }));
+	return { kelompok };
 }
 
 function loadLocal() {
-    try {
-        let hariSekarang = getKodeHariNow();
+	try {
+		let hariSekarang = getKodeHariNow();
 
-        let data = JSON.parse(
-            localStorage.getItem(STORAGE_KEY) || '{"kelompok": []}'
-        );
+		let data = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{"kelompok": []}');
 
-        let filtered = data.kelompok.filter(
-            (k) => k.hariPertemuan === String(hariSekarang)
-        );
+		let filtered = data.kelompok.filter((k) => k.hariPertemuan === String(hariSekarang));
 
-        return { kelompok: filtered };
-    } catch (e) {
-        return { kelompok: [] };
-    }
+		return { kelompok: filtered };
+	} catch (e) {
+		return { kelompok: [] };
+	}
 }
 
 function calcPresencePercentage(state) {
-    let total = 0;
-    let hadir = 0;
+	let total = 0;
+	let hadir = 0;
 
-    state.kelompok.forEach((g) => {
-        g.nasabah.forEach((n) => {
-            total++;
-            if (n.status !== "none") hadir++;
-        });
-    });
+	state.kelompok.forEach((g) => {
+		g.nasabah.forEach((n) => {
+			total++;
+			if (n.status !== "none") hadir++;
+		});
+	});
 
-    if (total === 0) return "0.00";
-    return ((hadir / total) * 100).toFixed(2);
+	if (total === 0) return "0.00";
+	return ((hadir / total) * 100).toFixed(2);
 }
 
 function syncData() {
-    try {
-        showLoading();
-    } finally {
-        hideLoading();
+	try {
+		showLoading();
+	} finally {
+		hideLoading();
 
-        alert("berhasil sinkronisasi");
+		alert("berhasil sinkronisasi");
 
-        location.reload();
-    }
+		location.reload();
+	}
 }
 
 const clearBtn = document.getElementById("clearBtn");
 
 clearBtn.addEventListener("click", () => {
-    const konfirmasi = confirm("Yakin ingin menghapus semua data?");
-    if (konfirmasi) {
-        localStorage.clear();
-        alert("Data berhasil dihapus");
-        location.reload();
-    } else {
-        alert("Penghapusan dibatalkan");
-    }
+	const konfirmasi = confirm("Yakin ingin menghapus semua data?");
+	if (konfirmasi) {
+		localStorage.clear();
+		alert("Data berhasil dihapus");
+		location.reload();
+	} else {
+		alert("Penghapusan dibatalkan");
+	}
 });
 
 function saveData(data) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+	localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
 }
 
 function genId(prefix = "") {
-    return (
-        prefix +
-        Date.now().toString(36) +
-        Math.floor(Math.random() * 900).toString(36)
-    );
+	return prefix + Date.now().toString(36) + Math.floor(Math.random() * 900).toString(36);
 }
 
 function rupiah(n) {
-    n = Number(n) || 0;
-    return n.toLocaleString("id-ID");
+	n = Number(n) || 0;
+	return n.toLocaleString("id-ID");
 }
 
 function qs(name) {
-    return new URLSearchParams(location.search).get(name);
+	return new URLSearchParams(location.search).get(name);
 }
 
 /* ===== INITIAL APP STATE ===== */
@@ -192,6 +179,7 @@ const totalBelumEl = document.getElementById("totalBelum");
 const totalBelumNasabahEl = document.getElementById("nasBelumStor");
 const totalSudahNasabahEl = document.getElementById("nasSudahStor");
 const totalProgress = document.getElementById("progress");
+const totalRill = document.getElementById("totalRill");
 
 const pageGroups = document.getElementById("page-groups");
 const pageGroupDetail = document.getElementById("page-group-detail");
@@ -224,72 +212,73 @@ const btnDeleteGroup = document.getElementById("btnDeleteGroup");
 
 /* ===== RENDER: DASHBOARD & GROUP LIST ===== */
 function calcAllTotals() {
-    let totalCash = 0,
-        totalTf = 0,
-        totalNas = 0,
-        totalTagihan = 0,
-        totalBelumNas = 0,
-        totalSudahNas = 0;
+	let totalCash = 0,
+		totalTf = 0,
+		totalNas = 0,
+		totalTagihan = 0,
+		totalBelumNas = 0,
+		totalSudahNas = 0;
 
-    state?.kelompok.forEach((k) => {
-        k.nasabah.forEach((n) => {
-            const t = Number(n.tagihan) || 0;
-            totalTagihan += t;
+	state?.kelompok.forEach((k) => {
+		k.nasabah.forEach((n) => {
+			const t = Number(n.tagihan) || 0;
+			totalTagihan += t;
 
-            if (n.status === "cash") totalCash += t;
-            else if (n.status === "tf") totalTf += t;
-            else if (n.status === "none") totalBelumNas += 1;
-        });
+			if (n.status === "cash") totalCash += t;
+			else if (n.status === "tf") totalTf += t;
+			else if (n.status === "none") totalBelumNas += 1;
+		});
 
-        totalNas += k.nasabah.length;
-    });
+		totalNas += k.nasabah.length;
+	});
 
-    return {
-        totalCash,
-        totalTf,
-        totalNas,
-        totalTagihan,
-        totalBelum: Math.max(0, totalTagihan - (totalCash + totalTf)),
-        totalBelumNas,
-        totalSudahNas: totalNas - totalBelumNas,
-    };
+	return {
+		totalCash,
+		totalTf,
+		totalNas,
+		totalTagihan,
+		totalBelum: Math.max(0, totalTagihan - (totalCash + totalTf)),
+		totalBelumNas,
+		totalSudahNas: totalNas - totalBelumNas
+	};
 }
 
 function renderDashboard() {
-    const totals = calcAllTotals();
-    totalUangEl.innerText = `Rp ${rupiah(totals.totalCash + totals.totalTf)}`;
-    totalTransferEl.innerText = `Rp ${rupiah(totals.totalTf)}`;
-    totalNasabahEl.innerText = totals.totalNas.toString();
-    totalBelumEl.innerText = `Rp ${rupiah(totals.totalBelum)}`;
-    totalBelumNasabahEl.innerText = totals.totalBelumNas;
-    totalSudahNasabahEl.innerText = totals.totalSudahNas;
-    totalProgress.innerHTML = calcPresencePercentage(state) + "%";
+	const totals = calcAllTotals();
+	totalUangEl.innerText = `Rp ${rupiah(totals.totalCash + totals.totalTf)}`;
+	totalTransferEl.innerText = `Rp ${rupiah(totals.totalTf)}`;
+	totalRill.innerText = `Rp ${rupiah(totals.totalCash)}`;
+	totalNasabahEl.innerText = totals.totalNas.toString();
+	totalBelumEl.innerText = `Rp ${rupiah(totals.totalBelum)}`;
+	totalBelumNasabahEl.innerText = totals.totalBelumNas.toString();
+	totalSudahNasabahEl.innerText = totals.totalSudahNas.toString();
+	totalProgress.innerHTML = calcPresencePercentage(state) + "%";
 }
 
 function renderGroups() {
-    groupsListEl.innerHTML = "";
-    if (state.kelompok.length === 0) {
-        groupsListEl.innerHTML = `<div class="empty">Tidak ada penagihan hari ini. Klik "Tambah Kelompok" untuk mulai.</div>`;
-        return;
-    }
+	groupsListEl.innerHTML = "";
+	if (state.kelompok.length === 0) {
+		groupsListEl.innerHTML = `<div class="empty">Tidak ada penagihan hari ini.</div>`;
+		return;
+	}
 
-    state.kelompok.forEach((k) => {
-        let cash = 0,
-            tf = 0,
-            target = 0;
-        k.nasabah.forEach((n) => {
-            const t = Number(n.tagihan) || 0;
-            target += t;
-            if (n.status === "cash") cash += t;
-            else if (n.status === "tf") tf += t;
-        });
+	state.kelompok.forEach((k) => {
+		let cash = 0,
+			tf = 0,
+			target = 0;
+		k.nasabah.forEach((n) => {
+			const t = Number(n.tagihan) || 0;
+			target += t;
+			if (n.status === "cash") cash += t;
+			else if (n.status === "tf") tf += t;
+		});
 
-        const div = document.createElement("div");
-        div.className = "list-item";
-        div.setAttribute("data-action", "open");
-        div.setAttribute("data-id", k.id);
+		const div = document.createElement("div");
+		div.className = "list-item";
+		div.setAttribute("data-action", "open");
+		div.setAttribute("data-id", k.id);
 
-        div.innerHTML = `
+		div.innerHTML = `
       <div class="list-left">
         <div>
           <div class="kelompok-name">${escapeHtml(k.nama)}</div>
@@ -311,68 +300,65 @@ function renderGroups() {
       </div>
     `;
 
-        groupsListEl.appendChild(div);
-    });
+		groupsListEl.appendChild(div);
+	});
 
-    feather.replace();
+	feather.replace();
 }
 
 /* ===== GROUP DETAIL RENDER ===== */
 function renderGroupDetail(groupId) {
-    const k = state.kelompok.find((x) => x.id === groupId);
-    if (!k) return alert("Kelompok tidak ditemukan");
+	const k = state.kelompok.find((x) => x.id === groupId);
+	if (!k) return alert("Kelompok tidak ditemukan");
 
-    currentGroupId = groupId;
-    groupTitleEl.innerText = k.nama;
+	currentGroupId = groupId;
+	groupTitleEl.innerText = k.nama;
 
-    // meta
-    const totalTarget = k.nasabah.reduce(
-        (s, n) => s + (Number(n.tagihan) || 0),
-        0
-    );
-    const totalCash = k.nasabah
-        .filter((n) => n.status === "cash")
-        .reduce((s, n) => s + (Number(n.tagihan) || 0), 0);
-    const totalTf = k.nasabah
-        .filter((n) => n.status === "tf")
-        .reduce((s, n) => s + (Number(n.tagihan) || 0), 0);
-    const belum = Math.max(0, totalTarget - (totalCash + totalTf));
-    groupMetaEl.innerHTML = `<small class="kelompok-meta">Total Tagihan: Rp ${rupiah(
-        totalTarget
-    )} • Cash: Rp ${rupiah(totalCash)} • TF: Rp ${rupiah(
-        totalTf
-    )} • Belum: Rp ${rupiah(belum)}</small>`;
+	// meta
+	const totalTarget = k.nasabah.reduce((s, n) => s + (Number(n.tagihan) || 0), 0);
+	const totalCash = k.nasabah
+		.filter((n) => n.status === "cash")
+		.reduce((s, n) => s + (Number(n.tagihan) || 0), 0);
+	const totalTf = k.nasabah
+		.filter((n) => n.status === "tf")
+		.reduce((s, n) => s + (Number(n.tagihan) || 0), 0);
+	const belum = Math.max(0, totalTarget - (totalCash + totalTf));
+	groupMetaEl.innerHTML = `<small class="kelompok-meta">Total Tagihan: Rp ${rupiah(
+		totalTarget
+	)} • Cash: Rp ${rupiah(totalCash)} • TF: Rp ${rupiah(totalTf)} • Belum: Rp ${rupiah(
+		belum
+	)}</small>`;
 
-    // recap boxes
-    groupRecapEl.innerHTML = `
+	// recap boxes
+	groupRecapEl.innerHTML = `
     <div class="group-recap">
       <div class="recap-box"><div style="color:var(--muted)">Total Tagihan</div><div style="font-weight:700;color:var(--blue)">Rp ${rupiah(
-          totalTarget
-      )}</div></div>
+			totalTarget
+		)}</div></div>
       <div class="recap-box"><div style="color:var(--muted)">Terkumpul (Cash)</div><div style="font-weight:700;color:var(--blue)">Rp ${rupiah(
-          totalCash
-      )}</div></div>
+			totalCash
+		)}</div></div>
       <div class="recap-box"><div style="color:var(--muted)">Total Transfer</div><div style="font-weight:700;color:var(--blue)">Rp ${rupiah(
-          totalTf
-      )}</div></div>
+			totalTf
+		)}</div></div>
       <div class="recap-box"><div style="color:var(--muted)">Belum Terkumpul</div><div style="font-weight:700;color:var(--blue)">Rp ${rupiah(
-          belum
-      )}</div></div>
+			belum
+		)}</div></div>
     </div>
   `;
 
-    // nasabah list
-    nasabahListEl.innerHTML = "";
-    if (k.nasabah.length === 0) {
-        nasabahListEl.innerHTML = `<div class="empty">Belum ada nasabah di kelompok ini.</div>`;
-    } else {
-        k.nasabah.forEach((n) => {
-            const nas = document.createElement("div");
-            nas.className = "list-item";
-            if (n.status !== "none") {
-                nas.classList.add("payed");
-            }
-            nas.innerHTML = `
+	// nasabah list
+	nasabahListEl.innerHTML = "";
+	if (k.nasabah.length === 0) {
+		nasabahListEl.innerHTML = `<div class="empty">Belum ada nasabah di kelompok ini.</div>`;
+	} else {
+		k.nasabah.forEach((n) => {
+			const nas = document.createElement("div");
+			nas.className = "list-item";
+			if (n.status !== "none") {
+				nas.classList.add("payed");
+			}
+			nas.innerHTML = `
 <div class="nasabah-item">
 
   <div class="nasabah-info">
@@ -381,12 +367,8 @@ function renderGroupDetail(groupId) {
     <div class="meta">
       Tagihan: Rp ${rupiah(n.tagihan)} •
       Status: <strong>${
-        n.status === "cash"
-          ? "Cash"
-          : n.status === "tf"
-          ? "Transfer"
-          : "Belum Stor"
-      }</strong>
+			n.status === "cash" ? "Cash" : n.status === "tf" ? "Transfer" : "Belum Stor"
+		}</strong>
     </div>
 
     <div class="angsuran-ke">
@@ -397,17 +379,23 @@ function renderGroupDetail(groupId) {
   <div class="nasabah-actions">
     <div class="status-wrap">
       <label class="radio-card">
-        <input type="radio" name="st${n.id}" value="cash" ${n.status === "cash" ? "checked" : ""} data-group="${k.id}" data-nasabah="${n.id}">
+        <input type="radio" name="st${n.id}" value="cash" ${
+			n.status === "cash" ? "checked" : ""
+		} data-group="${k.id}" data-nasabah="${n.id}">
         Cash
       </label>
 
       <label class="radio-card">
-        <input type="radio" name="st${n.id}" value="tf" ${n.status === "tf" ? "checked" : ""} data-group="${k.id}" data-nasabah="${n.id}">
+        <input type="radio" name="st${n.id}" value="tf" ${
+			n.status === "tf" ? "checked" : ""
+		} data-group="${k.id}" data-nasabah="${n.id}">
         Transfer
       </label>
 
       <label class="radio-card">
-        <input type="radio" name="st${n.id}" value="none" ${n.status === "none" ? "checked" : ""} data-group="${k.id}" data-nasabah="${n.id}">
+        <input type="radio" name="st${n.id}" value="none" ${
+			n.status === "none" ? "checked" : ""
+		} data-group="${k.id}" data-nasabah="${n.id}">
         Tidak Stor
       </label>
     </div>
@@ -425,328 +413,327 @@ function renderGroupDetail(groupId) {
 
 </div>
 `;
-            nasabahListEl.appendChild(nas);
-        });
-        feather.replace();
-    }
+			nasabahListEl.appendChild(nas);
+		});
+		feather.replace();
+	}
 
-    // show detail page
-    pageGroups.classList.add("hidden");
-    pageGroupDetail.classList.remove("hidden");
+	// show detail page
+	pageGroups.classList.add("hidden");
+	pageGroupDetail.classList.remove("hidden");
 }
 
 /* ===== CRUD: Kelompok ===== */
 function addGroup(name) {
-    state.kelompok.push({ id: genId(cabangID), nama: name, nasabah: [] });
-    saveData(state);
-    renderAll();
+	state.kelompok.push({ id: genId(cabangID), nama: name, nasabah: [] });
+	saveData(state);
+	renderAll();
 }
 
 function updateGroup(id, newName) {
-    const k = state.kelompok.find((x) => x.id === id);
-    if (!k) return;
-    k.nama = newName;
-    saveData(state);
-    renderAll();
+	const k = state.kelompok.find((x) => x.id === id);
+	if (!k) return;
+	k.nama = newName;
+	saveData(state);
+	renderAll();
 }
 
 function removeGroup(id) {
-    state.kelompok = state.kelompok.filter((x) => x.id !== id);
-    saveData(state);
-    renderAll();
+	state.kelompok = state.kelompok.filter((x) => x.id !== id);
+	saveData(state);
+	renderAll();
 }
 
 /* ===== CRUD: Nasabah ===== */
 function addNasabahToGroup(groupId, nama, tagihan, status = "none") {
-    const k = state.kelompok.find((x) => x.id === groupId);
-    if (!k) return;
-    k.nasabah.push({
-        rill: 0,
-        ke: 0,
-        idProduk: "",
-        id: genId("n_"),
-        nama: nama,
-        tagihan: Number(tagihan) || 0,
-        status,
-    });
-    saveData(state);
-    renderGroupDetail(groupId);
-    renderAll();
+	const k = state.kelompok.find((x) => x.id === groupId);
+	if (!k) return;
+	k.nasabah.push({
+		rill: 0,
+		ke: 0,
+		idProduk: "",
+		id: genId("n_"),
+		nama: nama,
+		tagihan: Number(tagihan) || 0,
+		status
+	});
+	saveData(state);
+	renderGroupDetail(groupId);
+	renderAll();
 }
 
 function updateNasabah(groupId, nasabahId, newName, newTagihan) {
-    const k = state.kelompok.find((x) => x.id === groupId);
-    if (!k) return;
-    const n = k.nasabah.find((x) => x.id === nasabahId);
-    if (!n) return;
-    n.nama = newName;
-    n.tagihan = Number(newTagihan) || 0;
-    saveData(state);
-    renderGroupDetail(groupId);
+	const k = state.kelompok.find((x) => x.id === groupId);
+	if (!k) return;
+	const n = k.nasabah.find((x) => x.id === nasabahId);
+	if (!n) return;
+	n.nama = newName;
+	n.tagihan = Number(newTagihan) || 0;
+	saveData(state);
+	renderGroupDetail(groupId);
 }
 
 function removeNasabah(groupId, nasabahId) {
-    const k = state.kelompok.find((x) => x.id === groupId);
-    if (!k) return;
-    k.nasabah = k.nasabah.filter((x) => x.id !== nasabahId);
-    saveData(state);
-    renderGroupDetail(groupId);
+	const k = state.kelompok.find((x) => x.id === groupId);
+	if (!k) return;
+	k.nasabah = k.nasabah.filter((x) => x.id !== nasabahId);
+	saveData(state);
+	renderGroupDetail(groupId);
 }
 
 function setNasabahStatus(groupId, nasabahId, status) {
-    const k = state.kelompok.find((x) => x.id === groupId);
-    if (!k) return;
-    const n = k.nasabah.find((x) => x.id === nasabahId);
-    if (!n) return;
-    n.status = status;
-    saveData(state);
-    renderGroupDetail(groupId);
+	const k = state.kelompok.find((x) => x.id === groupId);
+	if (!k) return;
+	const n = k.nasabah.find((x) => x.id === nasabahId);
+	if (!n) return;
+	n.status = status;
+	saveData(state);
+	renderGroupDetail(groupId);
 }
 
 /* ===== EVENTS & MODAL LOGIC ===== */
 function openModal(modalEl) {
-    modalEl.style.display = "flex";
+	modalEl.style.display = "flex";
 }
 function closeModal(modalEl) {
-    modalEl.style.display = "none";
+	modalEl.style.display = "none";
 }
 
 function bindEvents() {
-    // open new group modal
-    btnNewGroup?.addEventListener("click", () => {
-        openNewGroupModal();
-    });
-    openNewGroup?.addEventListener("click", () => {
-        openNewGroupModal();
-    });
+	// open new group modal
+	btnNewGroup?.addEventListener("click", () => {
+		openNewGroupModal();
+	});
+	openNewGroup?.addEventListener("click", () => {
+		openNewGroupModal();
+	});
 
-    // modal group actions
-    closeGroupModal?.addEventListener("click", () => closeModal(modalGroup));
-    saveGroupBtn?.addEventListener("click", () => {
-        const name = inputGroupName.value.trim();
-        if (!name) return alert("Isi nama kelompok");
-        const editingId = saveGroupBtn.getAttribute("data-edit");
-        if (editingId) {
-            updateGroup(editingId, name);
-            saveGroupBtn.removeAttribute("data-edit");
-        } else {
-            addGroup(name);
-        }
-        inputGroupName.value = "";
-        closeModal(modalGroup);
-    });
+	// modal group actions
+	closeGroupModal?.addEventListener("click", () => closeModal(modalGroup));
+	saveGroupBtn?.addEventListener("click", () => {
+		const name = inputGroupName.value.trim();
+		if (!name) return alert("Isi nama kelompok");
+		const editingId = saveGroupBtn.getAttribute("data-edit");
+		if (editingId) {
+			updateGroup(editingId, name);
+			saveGroupBtn.removeAttribute("data-edit");
+		} else {
+			addGroup(name);
+		}
+		inputGroupName.value = "";
+		closeModal(modalGroup);
+	});
 
-    // group list actions (delegation)
-    groupsListEl.addEventListener("click", (ev) => {
-        const btn = ev.target.closest("button");
-        if (btn) {
-            const action = btn.dataset.action;
-            const id = btn.dataset.id;
-            if (action === "edit") return openEditGroupModal(id);
-            if (action === "delete") {
-                if (confirm("Hapus kelompok?")) removeGroup(id);
-                return;
-            }
-        }
+	// group list actions (delegation)
+	groupsListEl.addEventListener("click", (ev) => {
+		const btn = ev.target.closest("button");
+		if (btn) {
+			const action = btn.dataset.action;
+			const id = btn.dataset.id;
+			if (action === "edit") return openEditGroupModal(id);
+			if (action === "delete") {
+				if (confirm("Hapus kelompok?")) removeGroup(id);
+				return;
+			}
+		}
 
-        const item = ev.target.closest(".list-item");
-        if (item) {
-            const id = item.dataset.id;
-            renderGroupDetail(id);
-        }
-    });
-    // back button
-    backToGroups?.addEventListener("click", () => {
-        pageGroupDetail.classList.add("hidden");
-        pageGroups.classList.remove("hidden");
-        currentGroupId = null;
-        renderAll();
-    });
+		const item = ev.target.closest(".list-item");
+		if (item) {
+			const id = item.dataset.id;
+			renderGroupDetail(id);
+		}
+	});
+	// back button
+	backToGroups?.addEventListener("click", () => {
+		pageGroupDetail.classList.add("hidden");
+		pageGroups.classList.remove("hidden");
+		currentGroupId = null;
+		renderAll();
+	});
 
-    // group detail buttons
-    btnAddNasabah?.addEventListener("click", () => openAddNasabahModal());
-    btnEditGroup?.addEventListener("click", () => {
-        if (!currentGroupId) return;
-        openEditGroupModal(currentGroupId);
-    });
-    btnDeleteGroup?.addEventListener("click", () => {
-        if (!currentGroupId) return;
-        if (confirm("Hapus kelompok ini?")) {
-            removeGroup(currentGroupId);
-            pageGroupDetail.classList.add("hidden");
-            pageGroups.classList.remove("hidden");
-            currentGroupId = null;
-        }
-    });
+	// group detail buttons
+	btnAddNasabah?.addEventListener("click", () => openAddNasabahModal());
+	btnEditGroup?.addEventListener("click", () => {
+		if (!currentGroupId) return;
+		openEditGroupModal(currentGroupId);
+	});
+	btnDeleteGroup?.addEventListener("click", () => {
+		if (!currentGroupId) return;
+		if (confirm("Hapus kelompok ini?")) {
+			removeGroup(currentGroupId);
+			pageGroupDetail.classList.add("hidden");
+			pageGroups.classList.remove("hidden");
+			currentGroupId = null;
+		}
+	});
 
-    // nasabah interactions (radio, edit, delete) - delegation on nasabahListEl
-    nasabahListEl?.addEventListener("change", (ev) => {
-        const input = ev.target;
-        if (input && input.name && input.name.startsWith("st")) {
-            const groupId = input.getAttribute("data-group");
-            const nasId = input.getAttribute("data-nasabah");
-            const value = input.value;
-            setNasabahStatus(groupId, nasId, value);
-        }
-    });
+	// nasabah interactions (radio, edit, delete) - delegation on nasabahListEl
+	nasabahListEl?.addEventListener("change", (ev) => {
+		const input = ev.target;
+		if (input && input.name && input.name.startsWith("st")) {
+			const groupId = input.getAttribute("data-group");
+			const nasId = input.getAttribute("data-nasabah");
+			const value = input.value;
+			setNasabahStatus(groupId, nasId, value);
+		}
+	});
 
-    nasabahListEl?.addEventListener("click", (ev) => {
-        const btn = ev.target.closest("button");
-        if (!btn) return;
-        const action = btn.getAttribute("data-action");
-        const nasId = btn.getAttribute("data-id");
-        const groupId = btn.getAttribute("data-group");
-        if (action === "edit-n") {
-            // prompt edit
-            const k = state.kelompok.find((x) => x.id === groupId);
-            const n = k?.nasabah.find((x) => x.id === nasId);
-            if (!n) return;
-            const newName = prompt("Ubah nama nasabah:", n.nama);
-            if (newName === null) return;
-            const newTag = prompt("Ubah jumlah tagihan (angka):", n.tagihan);
-            if (newTag === null) return;
-            updateNasabah(groupId, nasId, newName.trim(), Number(newTag) || 0);
-        } else if (action === "del-n") {
-            if (confirm("Hapus nasabah ini?")) removeNasabah(groupId, nasId);
-        }
-    });
+	nasabahListEl?.addEventListener("click", (ev) => {
+		const btn = ev.target.closest("button");
+		if (!btn) return;
+		const action = btn.getAttribute("data-action");
+		const nasId = btn.getAttribute("data-id");
+		const groupId = btn.getAttribute("data-group");
+		if (action === "edit-n") {
+			// prompt edit
+			const k = state.kelompok.find((x) => x.id === groupId);
+			const n = k?.nasabah.find((x) => x.id === nasId);
+			if (!n) return;
+			const newName = prompt("Ubah nama nasabah:", n.nama);
+			if (newName === null) return;
+			const newTag = prompt("Ubah jumlah tagihan (angka):", n.tagihan);
+			if (newTag === null) return;
+			updateNasabah(groupId, nasId, newName.trim(), Number(newTag) || 0);
+		} else if (action === "del-n") {
+			if (confirm("Hapus nasabah ini?")) removeNasabah(groupId, nasId);
+		}
+	});
 
-    // modal nasabah controls
-    closeNasabahModal?.addEventListener("click", () => {
-        closeModal(modalNasabah);
-        clearNasabahModal();
-    });
-    saveNasabahBtn?.addEventListener("click", () => {
-        const name = inputNasabahName.value.trim();
-        const tag = Number(inputNasabahTagihan.value) || 0;
-        const status = getSelectedNasabahStatus();
-        if (!name) return alert("Isi nama nasabah");
-        addNasabahToGroup(currentGroupId, name, tag, status);
-        closeModal(modalNasabah);
-        clearNasabahModal();
-    });
-    saveNasabahAgainBtn?.addEventListener("click", () => {
-        const name = inputNasabahName.value.trim();
-        const tag = Number(inputNasabahTagihan.value) || 0;
-        const status = getSelectedNasabahStatus();
-        if (!name) return alert("Isi nama nasabah");
-        addNasabahToGroup(currentGroupId, name, tag, status);
-        // keep modal open and clear inputs for next
-        inputNasabahName.value = "";
-        inputNasabahTagihan.value = "";
-        inputNasabahName.focus();
-    });
+	// modal nasabah controls
+	closeNasabahModal?.addEventListener("click", () => {
+		closeModal(modalNasabah);
+		clearNasabahModal();
+	});
+	saveNasabahBtn?.addEventListener("click", () => {
+		const name = inputNasabahName.value.trim();
+		const tag = Number(inputNasabahTagihan.value) || 0;
+		const status = getSelectedNasabahStatus();
+		if (!name) return alert("Isi nama nasabah");
+		addNasabahToGroup(currentGroupId, name, tag, status);
+		closeModal(modalNasabah);
+		clearNasabahModal();
+	});
+	saveNasabahAgainBtn?.addEventListener("click", () => {
+		const name = inputNasabahName.value.trim();
+		const tag = Number(inputNasabahTagihan.value) || 0;
+		const status = getSelectedNasabahStatus();
+		if (!name) return alert("Isi nama nasabah");
+		addNasabahToGroup(currentGroupId, name, tag, status);
+		// keep modal open and clear inputs for next
+		inputNasabahName.value = "";
+		inputNasabahTagihan.value = "";
+		inputNasabahName.focus();
+	});
 
-    // clicking outside modal closes
-    window.addEventListener("click", (ev) => {
-        if (ev.target === modalGroup) closeModal(modalGroup);
-        if (ev.target === modalNasabah) closeModal(modalNasabah);
-    });
+	// clicking outside modal closes
+	window.addEventListener("click", (ev) => {
+		if (ev.target === modalGroup) closeModal(modalGroup);
+		if (ev.target === modalNasabah) closeModal(modalNasabah);
+	});
 }
 
 /* ===== OPEN / EDIT MODAL HELPERS ===== */
 function openNewGroupModal() {
-    modalGroupTitle.innerText = "Tambah Kelompok";
-    inputGroupName.value = "";
-    saveGroupBtn.removeAttribute("data-edit");
-    openModal(modalGroup);
+	modalGroupTitle.innerText = "Tambah Kelompok";
+	inputGroupName.value = "";
+	saveGroupBtn.removeAttribute("data-edit");
+	openModal(modalGroup);
 }
 
 function openEditGroupModal(id) {
-    const k = state.kelompok.find((x) => x.id === id);
-    if (!k) return;
-    modalGroupTitle.innerText = "Edit Kelompok";
-    inputGroupName.value = k.nama;
-    saveGroupBtn.setAttribute("data-edit", id);
-    openModal(modalGroup);
+	const k = state.kelompok.find((x) => x.id === id);
+	if (!k) return;
+	modalGroupTitle.innerText = "Edit Kelompok";
+	inputGroupName.value = k.nama;
+	saveGroupBtn.setAttribute("data-edit", id);
+	openModal(modalGroup);
 }
 
 function openAddNasabahModal() {
-    if (!currentGroupId) return alert("Pilih kelompok terlebih dahulu");
-    modalNasabah.querySelector("#modalNasabahTitle").innerText =
-        "Tambah Nasabah - " +
-        (state.kelompok.find((x) => x.id === currentGroupId)?.nama || "");
-    inputNasabahName.value = "";
-    inputNasabahTagihan.value = "";
-    // default radio none
-    const radios = modalNasabah.querySelectorAll('input[name="status"]');
-    radios.forEach((r) => (r.checked = r.value === "none"));
-    openModal(modalNasabah);
+	if (!currentGroupId) return alert("Pilih kelompok terlebih dahulu");
+	modalNasabah.querySelector("#modalNasabahTitle").innerText =
+		"Tambah Nasabah - " + (state.kelompok.find((x) => x.id === currentGroupId)?.nama || "");
+	inputNasabahName.value = "";
+	inputNasabahTagihan.value = "";
+	// default radio none
+	const radios = modalNasabah.querySelectorAll('input[name="status"]');
+	radios.forEach((r) => (r.checked = r.value === "none"));
+	openModal(modalNasabah);
 }
 
 function clearNasabahModal() {
-    inputNasabahName.value = "";
-    inputNasabahTagihan.value = "";
-    const radios = modalNasabah.querySelectorAll('input[name="status"]');
-    radios.forEach((r) => (r.checked = r.value === "none"));
+	inputNasabahName.value = "";
+	inputNasabahTagihan.value = "";
+	const radios = modalNasabah.querySelectorAll('input[name="status"]');
+	radios.forEach((r) => (r.checked = r.value === "none"));
 }
 
 function getSelectedNasabahStatus() {
-    const radios = modalNasabah.querySelectorAll('input[name="status"]');
-    for (const r of radios) if (r.checked) return r.value;
-    return "none";
+	const radios = modalNasabah.querySelectorAll('input[name="status"]');
+	for (const r of radios) if (r.checked) return r.value;
+	return "none";
 }
 
 /* ===== UTILITES ===== */
 function escapeHtml(str) {
-    if (typeof str !== "string") return str;
-    return str.replace(
-        /[&<>"']/g,
-        (m) =>
-            ({
-                "&": "&amp;",
-                "<": "&lt;",
-                ">": "&gt;",
-                '"': "&quot;",
-                "'": "&#39;",
-            }[m])
-    );
+	if (typeof str !== "string") return str;
+	return str.replace(
+		/[&<>"']/g,
+		(m) =>
+			({
+				"&": "&amp;",
+				"<": "&lt;",
+				">": "&gt;",
+				'"': "&quot;",
+				"'": "&#39;"
+			})[m]
+	);
 }
 
 function renderAll() {
-    renderDashboard();
-    renderGroups();
+	renderDashboard();
+	renderGroups();
 }
 
 /* ===== BOOTSTRAP ===== */
 async function init() {
-    let auth = localStorage.getItem("auth");
-    if (!auth) {
-        localStorage.setItem("isSync", false);
-        // redirect to login
-        window.location.href = "/login";
-        return;
-    }
+	let auth = localStorage.getItem("auth");
+	if (!auth) {
+		localStorage.setItem("isSync", false);
+		// redirect to login
+		window.location.href = "/login";
+		return;
+	}
 
-    console.log("STORAGE_KEY:", STORAGE_KEY);
-    console.log("state sebelum load:", state);
+	console.log("STORAGE_KEY:", STORAGE_KEY);
+	console.log("state sebelum load:", state);
 
-    if (localStorage.getItem("isSync") !== "true") {
-        try {
-            showLoading();
-            let dataKelompok = await getKelompok();
-            let dataNasabah = await getNasabah();
-            console.log("data kelompok:", dataKelompok);
-            console.log("data nasabah:", dataNasabah);
+	if (localStorage.getItem("isSync") !== "true") {
+		try {
+			showLoading();
+			let dataKelompok = await getKelompok();
+			let dataNasabah = await getNasabah();
+			console.log("data kelompok:", dataKelompok);
+			console.log("data nasabah:", dataNasabah);
 
-            state = loadData(dataKelompok, dataNasabah);
+			state = loadData(dataKelompok, dataNasabah);
 
-            console.log(state);
-        } catch (error) {
-            hideLoading();
-            alert("Gagal sinkronisasi: " + error.message);
-        } finally {
-            localStorage.setItem("isSync", true);
-            hideLoading();
-        }
-        alert("sync berhasil");
-    }
+			console.log(state);
+		} catch (error) {
+			hideLoading();
+			alert("Gagal sinkronisasi: " + error.message);
+		} finally {
+			localStorage.setItem("isSync", true);
+			hideLoading();
+		}
+		alert("sync berhasil");
+	}
 
-    state = loadLocal();
+	state = loadLocal();
 
-    if (!state.kelompok) state.kelompok = [];
-    bindEvents();
-    renderAll();
+	if (!state.kelompok) state.kelompok = [];
+	bindEvents();
+	renderAll();
 }
 
 init();
