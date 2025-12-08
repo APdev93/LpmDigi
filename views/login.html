@@ -1,111 +1,157 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-        <link rel="stylesheet" href="/style.css" type="text/css" media="all" />
-        <style type="text/css" media="all">
-            body {
-                margin: 0;
-                padding: 0;
-                background: #1e75d9;
-                font-family: Arial, sans-serif;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                height: 100vh;
-            }
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<meta http-equiv="X-UA-Compatible" content="ie=edge" />
+		<link rel="stylesheet" href="/style.css" type="text/css" media="all" />
+<style>
+    body {
+        margin: 0;
+        padding: 0;
+        background: #1e75d9;
+        font-family: Arial, sans-serif;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+    }
 
-            .card {
-                background: #fff;
-                padding: 30px;
-                width: 320px;
-                border-radius: 20px;
-                box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
-            }
+    .card {
+        background: #fff;
+        padding: 30px;
+        width: 320px;
+        border-radius: 20px;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+    }
 
-            .title {
-                text-align: center;
-                margin-bottom: 25px;
-                color: #1e75d9;
-            }
+    @media (max-width: 380px) {
+        .card {
+            width: 90%;
+            padding: 25px;
+        }
+    }
 
-            .form-group {
-                margin-bottom: 18px;
-                display: flex;
-                flex-direction: column;
-            }
+    .title {
+        text-align: center;
+        margin-bottom: 25px;
+        color: #1e75d9;
+        font-size: 24px;
+        font-weight: 700;
+    }
 
-            label {
-                font-size: 14px;
-                margin-bottom: 6px;
-                color: #333;
-            }
+    .form-group {
+        margin-bottom: 18px;
+        display: flex;
+        flex-direction: column;
+    }
 
-            input {
-                padding: 12px;
-                border-radius: 15px;
-                border: 1px solid #ccc;
-                font-size: 15px;
-                outline: none;
-            }
+    label {
+        font-size: 14px;
+        margin-bottom: 6px;
+        color: #333;
+    }
 
-            input:focus {
-                border-color: #1e75d9;
-            }
+    input {
+        padding: 12px;
+        border-radius: 15px;
+        border: 1px solid #ccc;
+        font-size: 15px;
+        outline: none;
+        width: 100%;
+    }
 
-            .btn-login {
-                width: 100%;
-                padding: 12px;
-                border: none;
-                margin-top: 10px;
-                border-radius: 50px;
-                background: #1e75d9;
-                color: #fff;
-                font-size: 16px;
-                cursor: pointer;
-            }
+    input:focus {
+        border-color: #1e75d9;
+    }
 
-            .btn-login:hover {
-                opacity: 0.9;
-            }
-        </style>
-        <title>LPM Digi - Login</title>
-    </head>
-    <body>
-        <div id="app">
-            <div class="card">
-                <h2 class="title">Selamat Datang</h2>
+    .password-wrapper {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
 
-                <div class="form-group">
-                    <label>Username</label>
-                    <input
-                        id="inputUserName"
-                        type="text"
-                        placeholder="Masukan username" />
-                </div>
+    .toggle-eye {
+        position: absolute;
+        right: 12px;
+        width: 20px;
+        height: 20px;
+        cursor: pointer;
+    }
 
-                <div class="form-group">
-                    <label>Password</label>
-                    <input
-                        id="inputPassword"
-                        type="password"
-                        placeholder="Masukan password" />
-                </div>
+    .toggle-eye::before {
+        content: "";
+        width: 20px;
+        height: 12px;
+        border: 2px solid #555;
+        border-radius: 50%;
+        position: absolute;
+        top: 4px;
+        left: 0;
+    }
 
-                <button class="btn-login" id="btnLogin">Login</button>
-            </div>
-        </div>
+    .toggle-eye::after {
+        content: "";
+        width: 2px;
+        height: 20px;
+        background: #555;
+        position: absolute;
+        left: 9px;
+        top: 0;
+        transform: rotate(45deg);
+        opacity: 0;
+        transition: .2s ease;
+    }
 
-        <div
-            id="loadingIndicator"
-            class="loader-container"
-            style="display: none">
-            <div class="loader"></div>
-        </div>
+    .toggle-eye.active::after {
+        opacity: 1;
+    }
 
-        <script src="/app.js" type="text/javascript" charset="utf-8"></script>
-        <script src="/login.js" type="text/javascript" charset="utf-8"></script>
-    </body>
+    .btn-login {
+        width: 100%;
+        padding: 12px;
+        border: none;
+        margin-top: 10px;
+        border-radius: 50px;
+        background: #1e75d9;
+        color: #fff;
+        font-size: 16px;
+        cursor: pointer;
+    }
+
+    .btn-login:hover {
+        opacity: .9;
+    }
+</style>
+		<title>LPM Digi - Login</title>
+	</head>
+	<body>
+		<div id="app">
+			<div class="card">
+				<h2 class="title">Selamat Datang</h2>
+
+				<div class="form-group">
+					<label>Username</label>
+					<input id="inputUserName" type="text" placeholder="Masukan username" />
+				</div>
+
+				<div class="form-group">
+					<label>Password</label>
+					<div class="password-wrapper">
+						<input id="inputPassword" type="password" placeholder="Masukan password" />
+						<span id="togglePassword" class="toggle-eye"></span>
+					</div>
+				</div>
+
+				<button class="btn-login" id="btnLogin">Login</button>
+			</div>
+		</div>
+
+		<div id="loadingIndicator" class="loader-container" style="display: none">
+			<div class="loader"></div>
+		</div>
+
+		<script src="/app.js" type="text/javascript" charset="utf-8"></script>
+		<script src="/login.js" type="text/javascript" charset="utf-8"></script>
+	</body>
 </html>
