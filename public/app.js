@@ -154,9 +154,20 @@ function syncData() {
 	} finally {
 		hideLoading();
 
-		successAlert("berhasil sinkronisasi");
-
-		location.reload();
+		Swal.fire({
+			title: "Berhasil!",
+			text: "Berhasil sinkronisasi",
+			icon: "success",
+			confirmButtonText: "Oke",
+			customClass: {
+				popup: "swal-success-popup",
+				confirmButton: "swal-success-btn"
+			}
+		}).then((result) => {
+			if (result.isConfirmed) {
+				window.location.reload();
+			}
+		});
 	}
 }
 
@@ -174,7 +185,8 @@ clearBtn.addEventListener("click", () => {
 			denyButton: "swal-deny-btn"
 		},
 		confirmButtonText: "Ya",
-		denyButtonText: `Tidak`
+		denyButtonText: "Tidak",
+		cancelButtonText: "Batal"
 	}).then((result) => {
 		if (result.isConfirmed) {
 			localStorage.clear();
@@ -740,7 +752,7 @@ async function init() {
 	if (!auth) {
 		localStorage.setItem("isSync", "0");
 		// redirect to login
-		window.location.href = "/login";
+		//window.location.href = "/login";
 		return;
 	}
 

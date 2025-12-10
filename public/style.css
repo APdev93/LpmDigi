@@ -237,9 +237,22 @@ body {
 }
 .stats-grid {
 	display: grid;
-	grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+	grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
 	gap: 12px;
 }
+
+@media (width > 400px) {
+	.stats-grid {
+		grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)) !important;
+	}
+}
+
+@media (width < 400px) {
+	.stats-grid {
+		grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)) !important;
+	}
+}
+
 .stat {
 	background: linear-gradient(180deg, rgba(255, 255, 255, 0.9), var(--card));
 	padding: 14px;
