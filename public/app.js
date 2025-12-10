@@ -752,7 +752,7 @@ async function init() {
 	if (!auth) {
 		localStorage.setItem("isSync", "0");
 		// redirect to login
-		//window.location.href = "/login";
+		window.location.href = "/login";
 		return;
 	}
 
