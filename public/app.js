@@ -121,15 +121,23 @@ function loadData(kelompokData, nasabahData) {
 
 function loadLocal() {
 	try {
-		let hariSekarang = getKodeHariNow();
-
+		showLoading();
 		let data = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{"kelompok": []}');
+		let hariSekarang = getKodeHariNow();
+		let filtered;
 
-		let filtered = data.kelompok.filter((k) => k.hariPertemuan === String(hariSekarang));
+		if (hariSekarang >= 6) {
+			filtered = filterNasabahAngsuranTerakhir(state);
+		} else {
+			filtered = data.kelompok.filter((k) => k.hariPertemuan === String(hariSekarang));
+		}
 
 		return { kelompok: filtered };
 	} catch (e) {
+		errorAlert(e.message);
 		return { kelompok: [] };
+	} finally {
+		hideLoading();
 	}
 }
 
@@ -149,6 +157,8 @@ function filterNasabahAngsuranTerakhir(dataset) {
 
 		if (nasabahFiltered.length > 0) {
 			hasil.kelompok.push({
+				id: k.id,
+				hariPertemuan: k.hariPertemuan,
 				nama: k.nama,
 				nasabah: nasabahFiltered
 			});
@@ -243,7 +253,6 @@ function qs(name) {
 /* ===== INITIAL APP STATE ===== */
 
 let state = {};
-let stateType = localStorage.getItem("stateType");
 
 let currentGroupId = null;
 
@@ -287,21 +296,6 @@ const btnAddNasabah = document.getElementById("btnAddNasabah");
 const btnEditGroup = document.getElementById("btnEditGroup");
 const btnDeleteGroup = document.getElementById("btnDeleteGroup");
 const btnCekDo = document.getElementById("btnCekDo");
-
-btnCekDo.addEventListener("click", () => {
-	showLoading();
-	if (stateType === "normal") {
-		let data = filterNasabahAngsuranTerakhir(state);
-		console.log(data);
-		localStorage.setItem("stateType", "cekDO");
-		state = data;
-	} else {
-		state = localStorage.getItem(STORAGE_KEY);
-		localStorage.setItem("stateType", "normal");
-	}
-	hideLoading();
-	window.location.reload();
-});
 
 /* ===== RENDER: DASHBOARD & GROUP LIST ===== */
 function calcAllTotals() {
@@ -349,7 +343,17 @@ function renderDashboard() {
 }
 
 function renderGroups() {
+	const cardTitle = document.getElementById("cardTitle");
+
 	groupsListEl.innerHTML = "";
+	let currentDay = getKodeHariNow();
+
+	if (currentDay >= 6) {
+		cardTitle.innerText = "Daftar DO Minggu Depan";
+	} else {
+		cardTitle.innerText = "Daftar PKM";
+	}
+
 	if (state.kelompok.length === 0) {
 		groupsListEl.innerHTML = `<div class="empty">Tidak ada penagihan hari ini.</div>`;
 		return;
@@ -794,7 +798,7 @@ async function init() {
 	if (!auth) {
 		localStorage.setItem("isSync", "0");
 		// redirect to login
-		//window.location.href = "/login";
+		window.location.href = "/login";
 		return;
 	}
 
